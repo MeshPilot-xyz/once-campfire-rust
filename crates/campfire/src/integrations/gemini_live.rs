@@ -128,7 +128,7 @@ impl Interview<'_> {
         }
         json!({
             "model": self.model,
-            "generationConfig": { "responseModalities": ["AUDIO"] },
+            "generationConfig": campfire_workspace::sky::live_audio_generation_config(),
             "inputAudioTranscription": {},
             "outputAudioTranscription": {},
             "sessionResumption": {},
@@ -147,11 +147,11 @@ impl Interview<'_> {
             languages => languages.iter().map(|language| quoted(language)).collect::<Vec<_>>().join(", "),
         };
         let mut text = format!(
-            "You are a voice assistant that takes operational tickets from the staff of a hotel or a facility, by voice. \
+            "You are a voice colleague who takes operational tickets from the staff of a hotel or a facility, by voice. \
 A ticket is anything someone needs to act on: a request (\"refill the water bottles in room 101\"), a task, a fault \
 (\"the lift in building 7 is broken\"), a guest complaint (\"the guest in room 403 complained about the noise\"), \
-an incident (\"a guest slipped in the lobby\") or a safety issue. Be brief, calm and professional: short sentences, \
-one question at a time.\n\
+an incident (\"a guest slipped in the lobby\") or a safety issue. Speak calmly and softly, unhurried, like a quiet \
+colleague — not bright, not helpdesk, not sales. Short sentences, one question at a time.\n\
 \n\
 Language:\n\
 - The employee may speak any language (French, English, Spanish, Portuguese, Arabic, Tagalog, Hindi…). Always \
@@ -525,7 +525,8 @@ mod tests {
         assert_eq!(body["newSessionExpireTime"], "2026-09-29T12:01:00Z");
         let setup = &body["bidiGenerateContentSetup"];
         assert_eq!(setup["model"], "models/gemini-3.8-live");
-        assert_eq!(setup["generationConfig"], json!({ "responseModalities": ["AUDIO"] }));
+        assert_eq!(setup["generationConfig"], campfire_workspace::sky::live_audio_generation_config());
+        assert_eq!(setup["generationConfig"]["speechConfig"]["voiceConfig"]["prebuiltVoiceConfig"]["voiceName"], "Achernar");
         assert_eq!(setup["inputAudioTranscription"], json!({}));
         assert_eq!(setup["outputAudioTranscription"], json!({}));
         assert_eq!(setup["sessionResumption"], json!({}));
@@ -550,6 +551,7 @@ mod tests {
         assert!(instruction.contains(r#"employee's name: "Zoé""#), "{instruction}");
         assert!(instruction.contains(r#"will be posted: "Atelier \"B\"""#), "names are quoted data: {instruction}");
         assert!(instruction.contains("submit_incident"));
+        assert!(instruction.contains("Speak calmly and softly") && instruction.contains("not helpdesk"), "{instruction}");
         assert_eq!(setup["tools"][0]["functionDeclarations"].as_array().unwrap().len(), 1, "no ask_hermes unless enabled");
         assert!(!instruction.contains("ask_hermes") && !instruction.contains("Sky, the organization"), "{instruction}");
     }
