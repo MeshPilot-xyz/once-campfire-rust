@@ -435,8 +435,9 @@ idle SKY_WARM_SECONDS, page hidden or left ── socket closed, POST /sky/usage
   `hermes/sky_ptt_logic.js` it imports that from `data-sky-logic-url`), so a reply keeps playing across Turbo visits; each page's own facts come from its
   non-permanent `<template data-sky-page data-screen data-room data-card data-hidden>`, read on
   `turbo:load`. The card sheet's card is read from the DOM at press time.
-- iOS: the `AudioContext` is resumed in the press's own handler; `navigator.audioSession.type` is
-  `play-and-record` while held and `playback` after (iOS 17+, ignored elsewhere).
+- iOS: the `AudioContext` is resumed in the press's own handler; `navigator.audioSession.type` stays
+  `play-and-record` for capture (PTT and Voice Report). Do not switch to `playback` on release: that
+  leaves Safari unable to `getUserMedia` until restart (iOS 17+, ignored elsewhere).
 
 ### Routes
 

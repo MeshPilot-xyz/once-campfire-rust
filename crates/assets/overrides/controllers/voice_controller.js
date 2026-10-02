@@ -523,6 +523,9 @@ export default class extends Controller {
   async #startAudio() {
     this.audioContext = new AudioContext()
     this.audioContext.resume().catch(() => {})
+    // iOS 17+: PTT used to leave the session on "playback", which makes getUserMedia throw
+    // InvalidStateError. Stay on play-and-record before any capture (same policy as Sky PTT).
+    try { if (navigator.audioSession) navigator.audioSession.type = "play-and-record" } catch {}
 
     try {
       this.stream = await withTimeout(navigator.mediaDevices.getUserMedia({

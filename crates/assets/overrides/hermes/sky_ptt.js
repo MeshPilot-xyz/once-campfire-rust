@@ -118,6 +118,7 @@ function onPage() {
   const hidden = logic.hiddenOn(sky.page)
   root.hidden = hidden
   // The live voice page has its own microphone and voice: nothing of Sky's may play over it.
+  // Tear down the warm session and leave iOS on play-and-record so Voice Report can open the mic.
   if (hidden) closeSession("hidden on this page")
   if (first) {
     if (!window.isSecureContext) return fail({ message: logic.TEXTS.insecure, state: "unsupported" })
@@ -258,7 +259,7 @@ function release({ limit = false } = {}) {
   const kind = logic.classifyRelease({ heldMs, cancelling: current.cancelling })
   if (kind === "cancel") return cancelPress("slide")
   stopMicrophone()
-  setAudioSession("playback")
+  setAudioSession(logic.CAPTURE_AUDIO_SESSION)
   if (kind === "tip") {
     current.outcome = "tip"
     clearPressTimers(current)
@@ -286,7 +287,7 @@ function cancelPress(reason) {
   current.outcome = "cancelled"
   clearPressTimers(current)
   stopMicrophone()
-  setAudioSession("playback")
+  setAudioSession(logic.CAPTURE_AUDIO_SESSION)
   current.buffer = []
   if (current.begun && !current.ended) {
     current.ended = true
@@ -508,6 +509,11 @@ function closeSession(reason) {
   // A new session starts clean.
   sky.dropping = false
   sky.staleComplete = false
+  stopMicrophone()
+  if (reason === "hidden on this page" || reason === "hidden" || reason === "pagehide" || reason === "no button") {
+    try { if (sky.audioContext && sky.audioContext.state === "running") sky.audioContext.suspend().catch(() => {}) } catch {}
+  }
+  setAudioSession(logic.CAPTURE_AUDIO_SESSION)
 }
 
 function dropSession() {
@@ -548,10 +554,11 @@ function startAudioInGesture() {
   } catch (error) {
     console.warn("sky: no audio context", error)
   }
-  setAudioSession("play-and-record")
+  setAudioSession(logic.CAPTURE_AUDIO_SESSION)
 }
 
-// iOS 17+: the microphone while held, the loud speaker for the reply.
+// iOS 17+: keep play-and-record for capture (PTT and Voice Report). Do not switch to playback
+// on release: that leaves Safari unable to getUserMedia until restart.
 function setAudioSession(type) {
   try { if (navigator.audioSession) navigator.audioSession.type = type } catch {}
 }

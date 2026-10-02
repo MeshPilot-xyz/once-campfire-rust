@@ -6,6 +6,16 @@
 // which reads it from `globalThis.HermesSky`: asset URLs are digested, so sky_ptt.js can't import it
 // by a relative path.
 
+// iOS 17+ AudioSession for any capture path (PTT mic and Voice Report). Stay on play-and-record;
+// switching to "playback" after PTT release leaves Safari with InvalidStateError until restart
+// ("AudioSession category is not compatible with audio capture"). Loud-speaker routing on iPhone
+// is not chased here.
+export const CAPTURE_AUDIO_SESSION = "play-and-record"
+
+export function iosAudioSessionFor(_phase) {
+  return CAPTURE_AUDIO_SESSION
+}
+
 // A release before this is a tap: a tip, nothing sent (and nothing reaches Gemini: the turn only
 // starts once the hold passed it).
 export const TIP_MS = 300
@@ -218,7 +228,7 @@ export function displayText(text) {
 }
 
 globalThis.HermesSky = {
-  TIP_MS, CANCEL_PX, WARN_HOLD_MS, MAX_HOLD_MS, KEEP_EXCHANGES, RESTORE_MAX_AGE_MS, REPLY_TIMEOUT_MS, STATES, TEXTS, CANCEL_NOTE,
-  next, holding, answering, inCancelZone, classifyRelease, holdStage, pageHint, hiddenOn, isTyping, isShortcut, keepExchanges,
+  CAPTURE_AUDIO_SESSION, TIP_MS, CANCEL_PX, WARN_HOLD_MS, MAX_HOLD_MS, KEEP_EXCHANGES, RESTORE_MAX_AGE_MS, REPLY_TIMEOUT_MS, STATES, TEXTS, CANCEL_NOTE,
+  iosAudioSessionFor, next, holding, answering, inCancelZone, classifyRelease, holdStage, pageHint, hiddenOn, isTyping, isShortcut, keepExchanges,
   replyError, micError, audioMsFromBase64, usageReport, timingsReport, timingsText, displayText
 }

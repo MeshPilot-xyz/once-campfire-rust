@@ -130,3 +130,11 @@ test("display text", () => {
   assert.equal(sky.displayText("  it's   ready\n"), "it’s ready")
   assert.equal(sky.displayText(undefined), "")
 })
+
+test("iOS capture paths stay on play-and-record (never playback)", () => {
+  assert.equal(sky.CAPTURE_AUDIO_SESSION, "play-and-record")
+  for (const phase of [ "press", "release", "cancel", "voice-report", "hidden" ]) {
+    assert.equal(sky.iosAudioSessionFor(phase), "play-and-record", phase)
+    assert.notEqual(sky.iosAudioSessionFor(phase), "playback", phase)
+  }
+})
